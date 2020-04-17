@@ -1,17 +1,17 @@
 package io.mrlokop.kotlin.utils
 
-import io.mrlokop.kotlin.utils.conventer.Converter
 import io.mrlokop.kotlin.utils.conventer.enities.EntryEntity
 import io.mrlokop.kotlin.utils.conventer.enities.IntPrimitiveEntity
 import io.mrlokop.kotlin.utils.conventer.enities.expression.ConstantExpression
 import io.mrlokop.kotlin.utils.conventer.enities.expression.StringExpression
+import io.mrlokop.kotlin.utils.conventer.parsers.KParser
 import org.jetbrains.kotlin.spec.grammar.tools.parseKotlinCode
 import org.jetbrains.kotlin.spec.grammar.tools.tokenizeKotlinCode
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 
-class TestKotlinConverter {
+class TestKotlinParser {
 
 
     val file = """
@@ -34,7 +34,7 @@ inline fun main() {
         val tokens = tokenizeKotlinCode(file)
         val parseTree = parseKotlinCode(tokens)
 
-        entry = Converter(parseTree).parse()
+        entry = KParser(parseTree).parse()
 
     }
 

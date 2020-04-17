@@ -1,9 +1,9 @@
 package io.mrlokop.kotlin.utils
 
 import com.google.gson.Gson
-import io.mrlokop.kotlin.utils.conventer.Converter
 import io.mrlokop.kotlin.utils.conventer.JSConverter
 import io.mrlokop.kotlin.utils.conventer.enities.EntryEntity
+import io.mrlokop.kotlin.utils.conventer.parsers.KParser
 import org.apache.commons.io.FileUtils
 import org.jetbrains.kotlin.spec.grammar.tools.parseKotlinCode
 import org.jetbrains.kotlin.spec.grammar.tools.tokenizeKotlinCode
@@ -19,7 +19,7 @@ fun main() {
             FileUtils.readFileToString(it, Charset.defaultCharset())
         )
         val parseTree = parseKotlinCode(tokens)
-        entries.add(Converter(parseTree, it.name).parse())
+        entries.add(KParser(parseTree, it.name).parse())
 
     }
 

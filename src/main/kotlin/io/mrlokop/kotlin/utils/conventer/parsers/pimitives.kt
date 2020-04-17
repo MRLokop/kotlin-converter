@@ -1,21 +1,21 @@
 package io.mrlokop.kotlin.utils.conventer.parsers
 
-import io.mrlokop.kotlin.utils.conventer.KPS
 import io.mrlokop.kotlin.utils.conventer.enities.IntPrimitiveEntity
 import io.mrlokop.kotlin.utils.conventer.enities.PrimitiveEntity
+import io.mrlokop.kotlin.utils.conventer.utils.TreeNode
 import org.jetbrains.kotlin.spec.grammar.tools.KotlinParseTreeNodeType
 
-fun parseString(kpt: KPS): List<String> {
+fun parseString(kpt: TreeNode): List<String> {
     when (kpt.token) {
         "simpleIdentifier" -> {
             return kpt.children.map {
-                return parseString(it);
+                return parseString(it)
             }
         }
         "Identifier" -> {
             if (kpt.type == KotlinParseTreeNodeType.TERMINAL) {
-                val r = kpt.text;
-                return listOf(r!!)
+                val r = kpt.text
+                return listOf(r)
             } else {
                 return parseString(kpt)
             }
@@ -37,16 +37,16 @@ fun parseString(kpt: KPS): List<String> {
     return listOf()
 }
 
-fun parsePrimitive(primitive: KPS) : PrimitiveEntity {
+fun parsePrimitive(primitive: TreeNode): PrimitiveEntity {
     return when (primitive.token) {
         "literalConstant" -> {
             parsePrimitive(primitive.children[0])
         }
         "IntegerLiteral" -> {
-            IntPrimitiveEntity(primitive.text);
+            IntPrimitiveEntity(primitive.text)
         }
         else -> {
-            PrimitiveEntity(primitive.text);
+            PrimitiveEntity(primitive.text)
         }
     }
 }

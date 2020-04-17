@@ -1,16 +1,16 @@
 package io.mrlokop.kotlin.utils.conventer.parsers
 
-import io.mrlokop.kotlin.utils.conventer.KPS
-import io.mrlokop.kotlin.utils.conventer.debug
 import io.mrlokop.kotlin.utils.conventer.enities.FieldEntity
 import io.mrlokop.kotlin.utils.conventer.enities.TypeEntity
+import io.mrlokop.kotlin.utils.conventer.utils.TreeNode
+import io.mrlokop.kotlin.utils.conventer.utils.debug
 
 
-fun parseModifier(mod: KPS): String {
-    return mod.children[0].children[0].text;
+fun parseModifier(mod: TreeNode): String {
+    return mod.children[0].children[0].text
 }
 
-fun parseParameter(param: KPS): FieldEntity {
+fun parseParameter(param: TreeNode): FieldEntity {
     val field = FieldEntity()
     param.peek("simpleIdentifier") {
         field.name = parseString(it).joinToString("")
@@ -19,13 +19,13 @@ fun parseParameter(param: KPS): FieldEntity {
         debug("Peeked COLON")
     }
     param.peek("type") {
-        field.type = parseType(it);
+        field.type = parseType(it)
     }
     return field
 }
 
-fun parseType(type: KPS) : TypeEntity {
-    val ent = TypeEntity();
+fun parseType(type: TreeNode): TypeEntity {
+    val ent = TypeEntity()
 
     when (type.token) {
         "type" -> {
@@ -48,5 +48,5 @@ fun parseType(type: KPS) : TypeEntity {
             }
         }
     }
-    return ent;
+    return ent
 }

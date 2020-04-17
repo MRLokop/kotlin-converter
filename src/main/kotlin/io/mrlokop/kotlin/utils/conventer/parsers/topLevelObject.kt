@@ -1,14 +1,12 @@
 package io.mrlokop.kotlin.utils.conventer.parsers
 
-import io.mrlokop.kotlin.utils.conventer.KPS
 import io.mrlokop.kotlin.utils.conventer.enities.*
 import io.mrlokop.kotlin.utils.conventer.enities.expression.ExpressionEntity
-import java.beans.Expression
-import java.lang.IllegalStateException
+import io.mrlokop.kotlin.utils.conventer.utils.TreeNode
 
 
-fun parseTopLevel(tpLevel: KPS): TopLevelEntity {
-    val topLevel = TopLevelEntity();
+fun parseTopLevel(tpLevel: TreeNode): TopLevelEntity {
+    val topLevel = TopLevelEntity()
     for (child in tpLevel.children) {
         when (child.token) {
             "declaration" -> {
@@ -20,8 +18,8 @@ fun parseTopLevel(tpLevel: KPS): TopLevelEntity {
 }
 
 
-fun parseDeclaration(dec: KPS): DeclarationEntity {
-    val declaration = DeclarationEntity();
+fun parseDeclaration(dec: TreeNode): DeclarationEntity {
+    val declaration = DeclarationEntity()
     dec.children.forEach {
         when (it.token) {
             "functionDeclaration" -> {
@@ -32,12 +30,12 @@ fun parseDeclaration(dec: KPS): DeclarationEntity {
             }
         }
     }
-    return declaration;
+    return declaration
 }
 
 
-fun parsePropertyDeclaration(func: KPS): FieldEntity {
-    val field = FieldEntity();
+fun parsePropertyDeclaration(func: TreeNode): FieldEntity {
+    val field = FieldEntity()
 
     for (child in func.children) {
         when (child.token) {
@@ -55,11 +53,11 @@ fun parsePropertyDeclaration(func: KPS): FieldEntity {
         }
     }
 
-    return field;
+    return field
 }
 
-fun parseFunctionDeclaration(func: KPS): FunctionEntity {
-    val function = FunctionEntity();
+fun parseFunctionDeclaration(func: TreeNode): FunctionEntity {
+    val function = FunctionEntity()
 
     for (child in func.children) {
         when (child.token) {
@@ -99,10 +97,10 @@ fun parseFunctionDeclaration(func: KPS): FunctionEntity {
         }
     }
 
-    return function;
+    return function
 }
 
-fun parseBody(body: KPS): FunctionBodyEntity {
+fun parseBody(body: TreeNode): FunctionBodyEntity {
     val ent = FunctionBodyEntity()
     when (body.token) {
         "functionBody" -> {
@@ -110,10 +108,10 @@ fun parseBody(body: KPS): FunctionBodyEntity {
             ent.block = parseBlock(block)
         }
     }
-    return ent;
+    return ent
 }
 
-fun parseBlock(block: KPS): BlockEntity {
+fun parseBlock(block: TreeNode): BlockEntity {
     val ent = BlockEntity()
     block.forEach {
         when (it.token) {
@@ -124,10 +122,10 @@ fun parseBlock(block: KPS): BlockEntity {
             }
         }
     }
-    return ent;
+    return ent
 }
 
-fun parseArguments(arguments: KPS) : List<ExpressionEntity> {
+fun parseArguments(arguments: TreeNode): List<ExpressionEntity> {
     val res = mutableListOf<ExpressionEntity>()
     arguments.forEach {
         when (it.token) {
@@ -136,5 +134,5 @@ fun parseArguments(arguments: KPS) : List<ExpressionEntity> {
             }
         }
     }
-    return res;
+    return res
 }
