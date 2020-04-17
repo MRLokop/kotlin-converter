@@ -9,30 +9,31 @@ import org.jetbrains.kotlin.spec.grammar.tools.KotlinParseTree
 import org.jetbrains.kotlin.spec.grammar.tools.KotlinParseTreeNodeType
 import java.lang.reflect.Field
 
-open class Converter(val tree: KotlinParseTree) {
-    val converterScope = ConverterScope();
+open class Converter(val tree: KotlinParseTree, var fileName: String = "undefined") {
+    val converterScope = ConverterScope()
     fun parse(): EntryEntity {
         println(tree)
         return parse(KPS(tree), 0)
     }
 
     fun parse(kpt: KPS, iterations: Int): EntryEntity {
-        val entry = EntryEntity();
+        val entry = EntryEntity()
+        entry.fileName = fileName
         kpt.children.map {
             return@map parseRule(it, iterations, entry)
         }
-        return entry;
+        return entry
     }
 
     private fun parseRule(kp: KPS, iterations: Int, entry: EntryEntity): EntryEntity {
         println("DEBUG Parsing: ${kp.token}")
         when (kp.token) {
             "packageHeader" -> {
-                entry.packageName = parsePackage(kp);
+                entry.packageName = parsePackage(kp)
                 println("ParsedPackage: ${entry.packageName}")
             }
             "topLevelObject" -> {
-                val t = parseTopLevel(kp);
+                val t = parseTopLevel(kp)
                 entry.topLevels.add(t)
                 //  println(entry.packageName);
             }
@@ -43,20 +44,20 @@ open class Converter(val tree: KotlinParseTree) {
                 parse(kp, iterations + 1)
             }
         }
-        return entry;
+        return entry
     }
 
 
     companion object {
-        lateinit var nameField: Field;
-        lateinit var textField: Field;
+        lateinit var nameField: Field
+        lateinit var textField: Field
 
         init {
 
             mutableListOf(*KotlinParseTree::class.java.fields, *KotlinParseTree::class.java.declaredFields).forEach {
                 when (it.name) {
-                    "text" -> textField = it;
-                    "name" -> nameField = it;
+                    "text" -> textField = it
+                    "name" -> nameField = it
                 }
             }
 
@@ -66,22 +67,22 @@ open class Converter(val tree: KotlinParseTree) {
             if (textField == null) {
                 throw NullPointerException("Failed to get KotlinParseTree.text field")
             }
-            nameField.isAccessible = true;
-            textField.isAccessible = true;
+            nameField.isAccessible = true
+            textField.isAccessible = true
             println("[Converters] Reflection ok")
         }
     }
 }
 
 class KPS(private val kps: KotlinParseTree) {
-    var peek = -1;
+    var peek = -1
 
     fun peek(name: String, cb: (ksp: KPS) -> Unit) : Boolean {
         if ((peek + 1) < children.size) {
             val c = children[peek + 1]
             if (c.token == name) {
                 cb(c)
-                peek++;
+                peek++
                 return true
             }
             return false
@@ -92,7 +93,7 @@ class KPS(private val kps: KotlinParseTree) {
         if ((peek + 1) < children.size) {
             val c = children[peek + 1]
             if (c.token == name) {
-                peek++;
+                peek++
                 return c
             }
         }
@@ -142,9 +143,9 @@ class KPS(private val kps: KotlinParseTree) {
     fun peekIfExists(name: String): Boolean {
         if (!peek(name) {}) {
             peek++
-            return false;
+            return false
         }
-        return true;
+        return true
     }
 
     fun has(s: String): Boolean {
@@ -152,7 +153,7 @@ class KPS(private val kps: KotlinParseTree) {
             if (child.token == s)
                 return true
         }
-        return false;
+        return false
     }
 
     operator fun get(i: Int): KPS {

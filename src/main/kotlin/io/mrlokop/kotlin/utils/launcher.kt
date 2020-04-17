@@ -3,10 +3,8 @@ package io.mrlokop.kotlin.utils
 import com.google.gson.Gson
 import io.mrlokop.kotlin.utils.conventer.Converter
 import io.mrlokop.kotlin.utils.conventer.JSConverter
-import io.mrlokop.kotlin.utils.conventer.PHPConverter
+import io.mrlokop.kotlin.utils.conventer.enities.EntryEntity
 import org.apache.commons.io.FileUtils
-import org.jetbrains.kotlin.spec.grammar.tools.KotlinParseTree
-import org.jetbrains.kotlin.spec.grammar.tools.KotlinParseTreeNodeType
 import org.jetbrains.kotlin.spec.grammar.tools.parseKotlinCode
 import org.jetbrains.kotlin.spec.grammar.tools.tokenizeKotlinCode
 import java.io.File
@@ -14,20 +12,25 @@ import java.nio.charset.Charset
 
 fun main() {
 
-    val tokens = tokenizeKotlinCode(
-        FileUtils.readFileToString(File("index.kt"), Charset.defaultCharset())
-    )
-    val parseTree = parseKotlinCode(tokens)
+    val entries = mutableListOf<EntryEntity>()
+    File("inputs").listFiles().forEach {
 
-    val entry = Converter(parseTree).parse()
+        val tokens = tokenizeKotlinCode(
+            FileUtils.readFileToString(it, Charset.defaultCharset())
+        )
+        val parseTree = parseKotlinCode(tokens)
+        entries.add(Converter(parseTree, it.name).parse())
 
-    val converter = JSConverter(entry);
-    FileUtils.writeStringToFile(File("output.js"), converter.convert(), Charset.defaultCharset());
-    FileUtils.writeStringToFile(File("AST.json"), Gson().toJson(entry), Charset.defaultCharset());
+    }
 
-    println();
-    println();
-    println(" Starting ... ");
+    val converter = JSConverter(entries)
+
+    FileUtils.writeStringToFile(File("output.js"), converter.convert(), Charset.defaultCharset())
+    FileUtils.writeStringToFile(File("AST.json"), Gson().toJson(entries), Charset.defaultCharset())
+
+    println()
+    println()
+    println(" Starting ... ")
 
     val b = ProcessBuilder()
         .inheritIO()
