@@ -155,7 +155,7 @@ if (key === "main") {
             if (data.subTypes.isEmpty()) {
                 return "{\n\"name\": '${data.name}'\n}"
             } else {
-                return "{\n\"name\": '${data.name}', subTypes: [\n${data.subTypes.map { 
+                return "{\n\"name\": '${data.name}', \nsubTypes: [\n${data.subTypes.map { 
                     return@map serialize(it)
                 }.joinToString(", ")}\n]\n}"
             }
@@ -189,6 +189,19 @@ if (key === "main") {
             if (expression.const is IntPrimitiveEntity) {
                 return "${(expression.const as IntPrimitiveEntity).get()}"
             }
+        }
+        if (expression is AdditiveExpression) {
+            var script = " "
+            expression.operations.forEach {
+                if (it is AdditiveData) {
+                    script += " (${wrap(it.data)}) "
+                }
+                if (it is AdditiveOperator) {
+                    script += it.data
+                }
+            }
+            script += " "
+            return script;
         }
         if (expression is StringExpression) {
             return "'${expression.get()}'"

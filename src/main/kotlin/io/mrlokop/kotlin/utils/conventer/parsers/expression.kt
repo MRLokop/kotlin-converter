@@ -7,18 +7,19 @@ import io.mrlokop.kotlin.utils.conventer.enities.MultiLineText
 import io.mrlokop.kotlin.utils.conventer.enities.MultilineStringLiteralEntity
 import io.mrlokop.kotlin.utils.conventer.enities.expression.*
 import java.lang.IllegalArgumentException
-import java.sql.Statement
 
-fun parseExpression(expr: KPS): ExpressionEntity {
-    debug("Parsing: ${expr.token}")
-    when (expr.token) {
+fun parseExpression(expression: KPS): ExpressionEntity {
+    return parseExpression_(expression)
+}
+private fun parseExpression_(expression: KPS): ExpressionEntity {
+    when (expression.token) {
         "postfixUnaryExpression" -> {
-            if (expr.has("postfixUnarySuffix")) {
-                if (!expr.getOne("primaryExpression").has("stringLiteral")) {
+            if (expression.has("postfixUnarySuffix")) {
+                if (!expression.getOne("primaryExpression").has("stringLiteral")) {
                     val func = FunctionExpression();
                     func.functionName =
-                        parseString(expr.getOne("primaryExpression").getOne("simpleIdentifier")).joinToString("")
-                    expr.forEach {
+                        parseString(expression.getOne("primaryExpression").getOne("simpleIdentifier")).joinToString("")
+                    expression.forEach {
                         debug("   -> " + func.member, func.functionName, " --> ", it.token)
                         if (!it.has("callSuffix")) {
                             if (it.token == "primaryExpression") {
@@ -44,44 +45,69 @@ fun parseExpression(expr: KPS): ExpressionEntity {
                     }
                     return func;
                 } else {
-                    return parseExpression(expr.children[1]);
+                    return parseExpression_(expression.children[1]);
                 }
             } else {
 
-                return parseExpression(expr.children[0]);
+                return parseExpression_(expression.children[0]);
+            }
+        }
+        "additiveExpression" -> {
+            if (expression.has("additiveOperator")) {
+                // additive operation like 1+1 or 1-1
+                val ent = AdditiveExpression();
+                expression.forEach {
+                    when (it.token) {
+                        "multiplicativeExpression" -> {
+                            ent.operations.add(AdditiveData(parseExpression_(it)))
+                        }
+                        "additiveOperator" -> {
+                            ent.operations.add(AdditiveOperator(it[0].text))
+                        }
+                    }
+                }
+                return ent;
+            } else {
+                // not any operation go next
+                return parseExpression_(expression.children[0]);
             }
         }
         "expression", "disjunction", "conjunction", "equality", "comparison", "infixOperation", "elvisExpression", "infixFunctionCall", "rangeExpression",
-        "additiveExpression", "multiplicativeExpression", "multiLineStringLiteral", "asExpression", "assignableExpression", "prefixUnaryExpression", "primaryExpression"
+        "multiplicativeExpression", "asExpression", "assignableExpression", "prefixUnaryExpression", "primaryExpression"
         -> {
-            return parseExpression(expr.children[0]);
+            return parseExpression_(expression.children[0]);
         }
         "functionLiteral" -> {
 
         }
         "literalConstant" -> {
             val const = ConstantExpression();
-            const.const = parsePrimitive(expr)
+            const.const = parsePrimitive(expression)
             return const;
         }
-        "postfixUnarySuffix" -> {}
+        "postfixUnarySuffix" -> {
+        }
         "stringLiteral" -> {
-            val string = StringExpression(
-                parseString(
-                    expr.getOne("lineStringLiteral").getOne("lineStringContent")
-                ).joinToString()
-            );
-            debug("ParsedString: " + string.get())
+            if (expression.has("lineStringLiteral") && expression.getOne("lineStringLiteral").has("lineStringContent")) {
+                val string = StringExpression(
+                    parseString(
+                        expression.getOne("lineStringLiteral").getOne("lineStringContent")
+                    ).joinToString()
+                );
+                return string
+            }
+
+            val string = StringExpression("");
             return string
         }
         "declaration" -> {
             val r = DeclarationExpression()
-            r.field = parsePropertyDeclaration(expr.getOne("propertyDeclaration"))
+            r.field = parsePropertyDeclaration(expression.getOne("propertyDeclaration"))
             return r;
         }
         "multiLineStringLiteral" -> {
             val obj = MultilineStringLiteralEntity();
-            expr.forEach {
+            expression.forEach {
                 when (it.token) {
                     "multiLineStringLiteral" -> {
                         val a = MultiLineText()
@@ -90,7 +116,7 @@ fun parseExpression(expr: KPS): ExpressionEntity {
                     }
                     "multiLineStringExpression" -> {
                         val a = MultiLineExpression()
-                        a.expression = parseExpression(it.getOne("expression"))
+                        a.expression = parseExpression_(it.getOne("expression"))
                         obj.data.add(a)
                     }
                     "multiLineStringContent" -> {
@@ -110,21 +136,25 @@ fun parseExpression(expr: KPS): ExpressionEntity {
         "NL" -> {
 
         }
-        "SEMICOLON" -> {}
+        "SEMICOLON" -> {
+        }
         "simpleIdentifier" -> {
-            val id =  IdentifierExpression()
-            id.identifier = parseString(expr).joinToString("");
+            val id = IdentifierExpression()
+            id.identifier = parseString(expression).joinToString("");
             return id;
+        }
+        "parenthesizedExpression" -> {
+            return parseExpression_(expression.getOne("expression"))
         }
         "assignment" -> {
             val assigment = AssigmentExpression();
-            expr.forEach {
+            expression.forEach {
                 when (it.token) {
                     "assignableExpression" -> {
-                        assigment.field.name = (parseExpression(it) as IdentifierExpression).identifier
+                        assigment.field.name = (parseExpression_(it) as IdentifierExpression).identifier
                     }
                     "expression" -> {
-                        assigment.field.expression = parseExpression(it)
+                        assigment.field.expression = parseExpression_(it)
                     }
                     else -> {
                         it.forEach {
@@ -135,7 +165,7 @@ fun parseExpression(expr: KPS): ExpressionEntity {
             }
         }
         else -> {
-            throw IllegalArgumentException("Not supported expression\n\n-> ${expr.token}\n${expr}")
+            throw IllegalArgumentException("Not supported expression\n\n-> ${expression.token}\n${expression}")
         }
     }
 
@@ -145,7 +175,7 @@ fun parseExpression(expr: KPS): ExpressionEntity {
 fun parseStatement(statement: KPS): StatementEntity {
     val ent = StatementEntity()
     statement.forEach {
-        ent.expressions.add(parseExpression(it))
+        ent.expressions.add(parseExpression_(it))
     }
     return ent
 }

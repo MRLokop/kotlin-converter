@@ -4,6 +4,7 @@ import io.mrlokop.kotlin.utils.conventer.enities.EntryEntity
 import io.mrlokop.kotlin.utils.conventer.parsers.parsePackage
 import io.mrlokop.kotlin.utils.conventer.parsers.parseTopLevel
 import io.mrlokop.kotlin.utils.conventer.utils.ConverterScope
+import io.mrlokop.kotlin.utils.conventer.utils.prefix
 import org.jetbrains.kotlin.spec.grammar.tools.KotlinParseTree
 import org.jetbrains.kotlin.spec.grammar.tools.KotlinParseTreeNodeType
 import java.lang.reflect.Field
@@ -98,7 +99,7 @@ class KPS(private val kps: KotlinParseTree) {
         return null
     }
 
-    fun get(name: String, cb: (it: KPS) -> Unit) {
+    operator fun get(name: String, cb: (it: KPS) -> Unit) {
         children.subList(peek, children.size - peek).forEach {
             if (it.token == name) {
                 cb(it)
@@ -119,11 +120,14 @@ class KPS(private val kps: KotlinParseTree) {
         get() {
             return Converter.textField.get(kps) as String
         }
-
+    val textSafe: String?
+        get() {
+            return Converter.textField.get(kps) as String?
+        }
     var forEach = children::forEach
 
     override fun toString(): String {
-        return kps.toString();
+        return "\n-> " + token + (if (textSafe != null) " ($text) " else "") + "\n" + kps.toString().prefix("    ")
     }
 
     fun getOne(name: String): KPS {
@@ -149,6 +153,10 @@ class KPS(private val kps: KotlinParseTree) {
                 return true
         }
         return false;
+    }
+
+    operator fun get(i: Int): KPS {
+        return children[i]
     }
 
 }

@@ -1,11 +1,2 @@
-val constVariable = "Hello"
-var varibaleString: String = "A"
-fun main() {
-   // hello()
-    console.log("F")
-
-}
-
-fun hello() {
-
-}
+val summ = (1 + 1) + 2 - 4
+val min = 2 - 1
