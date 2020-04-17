@@ -73,9 +73,28 @@ fun parseExpression(expression: TreeNode): ExpressionEntity {
                 return parseExpression(expression.children[0])
             }
         }
+        "multiplicativeExpression" -> {
+            if (expression.has("multiplicativeOperator")) {
+                // additive operation like 1+1 or 1-1
+                val ent = MultiplicativeExpression()
+                expression.forEach {
+                    when (it.token) {
+                        "asExpression" -> {
+                            ent.operations.add(MultiplicativeData(parseExpression(it)))
+                        }
+                        "multiplicativeOperator" -> {
+                            ent.operations.add(MultiplicativeOperator(it[0].text))
+                        }
+                    }
+                }
+                return ent
+            } else {
+                // not any operation go next
+                return parseExpression(expression.children[0])
+            }
+        }
 
-        "expression", "disjunction", "conjunction", "equality", "comparison", "infixOperation", "elvisExpression", "infixFunctionCall", "rangeExpression",
-        "multiplicativeExpression", "asExpression", "assignableExpression", "prefixUnaryExpression", "primaryExpression"
+        "expression", "disjunction", "conjunction", "equality", "comparison", "infixOperation", "elvisExpression", "infixFunctionCall", "rangeExpression", "asExpression", "assignableExpression", "prefixUnaryExpression", "primaryExpression"
         -> {
             return parseExpression(expression.children[0])
         }

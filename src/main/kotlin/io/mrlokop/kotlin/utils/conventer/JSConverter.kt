@@ -194,6 +194,20 @@ if (key === "main") {
                 return "${(expression.const as IntPrimitiveEntity).get()}"
             }
         }
+        if (expression is MultiplicativeExpression) {
+
+            var script = " "
+            expression.operations.forEach {
+                if (it is MultiplicativeData) {
+                    script += " (${wrap(it.data)}) "
+                }
+                if (it is MultiplicativeOperator) {
+                    script += it.data
+                }
+            }
+            script += " "
+            return script
+        }
         if (expression is AdditiveExpression) {
             var script = " "
             expression.operations.forEach {
