@@ -253,11 +253,11 @@ class JSConverter(val entries: List<EntryEntity>) {
 
     var enableExpressionsShow = false
     var enableAutoRun = true
+    var enableMeta = true
 
     fun convert(): String {
         var script = ScriptBuilder()
         var entryId = 0
-
         script + "exports = () => {"
         script++
         script + "const root = {};"
@@ -288,6 +288,16 @@ class JSConverter(val entries: List<EntryEntity>) {
                                 it.expression!!
                             )
                             +escapePackage(entry.packageName) + "['" + it.name + "'] = " + it.name
+                            if (enableMeta) {
+                                +(it.name + ".$ = " + it.name + ".$ || {}; " + it.name + ".$.\$_meta ={")
+                                script++
+                                script + ("name: '" + it.name + "',")
+                                script + ("declarationType: '" + it.decType + "',")
+                                script--
+
+                                +"}"
+                            }
+                            +""
                         }
                     }
                 }
@@ -330,6 +340,17 @@ class JSConverter(val entries: List<EntryEntity>) {
                             line.script + "}"
 
                             +escapePackage(entry.packageName) + "['" + it.name + "'] = " + it.name
+
+                            if (enableMeta) {
+                                +(it.name + ".$ = " + it.name + ".$ || {}; " + it.name + ".$.\$_meta ={")
+                                script++
+                                script + ("name: '" + it.name + "',")
+                                script + ("modifiers: " + Gson().toJson(it.mods) + ",")
+                                script--
+
+                                +"}"
+                            }
+                            +""
                         }
                     }
                 }

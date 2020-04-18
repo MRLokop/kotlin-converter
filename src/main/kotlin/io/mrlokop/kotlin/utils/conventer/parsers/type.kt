@@ -3,7 +3,6 @@ package io.mrlokop.kotlin.utils.conventer.parsers
 import io.mrlokop.kotlin.utils.conventer.enities.FieldEntity
 import io.mrlokop.kotlin.utils.conventer.enities.TypeEntity
 import io.mrlokop.kotlin.utils.conventer.utils.TreeNode
-import io.mrlokop.kotlin.utils.conventer.utils.debug
 
 
 fun parseModifier(mod: TreeNode): String {
@@ -12,15 +11,14 @@ fun parseModifier(mod: TreeNode): String {
 
 fun parseParameter(param: TreeNode): FieldEntity {
     val field = FieldEntity()
-    param.peek("simpleIdentifier") {
+    assert(param.peek("simpleIdentifier") {
         field.name = parseString(it).joinToString("")
-    }
+    })
     if (param.peekIfExists("COLON")) {
-        debug("Peeked COLON")
     }
-    param.peek("type") {
+    assert(param.peek("type") {
         field.type = parseType(it)
-    }
+    })
     return field
 }
 

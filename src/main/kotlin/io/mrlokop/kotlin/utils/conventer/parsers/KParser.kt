@@ -23,7 +23,6 @@ open class KParser(val tree: KotlinParseTree, var fileName: String = "undefined"
     }
 
     private fun parseRule(kp: TreeNode, iterations: Int, entry: EntryEntity): EntryEntity {
-        println("DEBUG Parsing: ${kp.token}")
         when (kp.token) {
             "packageHeader" -> {
                 entry.packageName = parsePackage(kp)
