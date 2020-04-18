@@ -1,7 +1,5 @@
 package io.mrlokop.kotlin.utils.conventer.utils
 
-import java.lang.NullPointerException
-
 class ConverterScope {
     var packages = mutableMapOf<String, PackageContainer>()
 
@@ -11,7 +9,7 @@ class ConverterScope {
 
     fun getPackageOrCreate(pack: String): PackageContainer {
         if (packages.containsKey(pack)) return packages[pack]!! else {
-            packages[pack] = PackageContainer();
+            packages[pack] = PackageContainer()
             return packages[pack]!!
         }
     }

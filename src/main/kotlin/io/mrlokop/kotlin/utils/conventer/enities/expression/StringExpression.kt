@@ -5,6 +5,6 @@ class StringExpression(val data: String) : ExpressionEntity() {
         type = "string"
     }
     fun get(): String {
-        return data;
+        return data
     }
 }

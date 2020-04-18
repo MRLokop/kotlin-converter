@@ -1,12 +1,11 @@
 package io.mrlokop.kotlin.utils.conventer.enities.expression
 
-import io.mrlokop.kotlin.utils.conventer.enities.PrimitiveEntity
-
-class FunctionExpression : ExpressionEntity() {
+class FunctionInvokeExpression : ExpressionEntity() {
     init {
         type = "functionInvoke"
     }
-    var member = "";
+
+    var member = ""
     var functionName = ""
     var args = mutableListOf<ExpressionEntity>()
 }

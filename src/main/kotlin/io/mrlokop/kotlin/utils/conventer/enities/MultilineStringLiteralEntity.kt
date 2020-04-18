@@ -10,5 +10,5 @@ class MultiLineText : MultiLineObject(){
     var text = ""
 }
 class MultiLineExpression : MultiLineObject( ){
-    var expression: ExpressionEntity = ExpressionEntity();
+    var expression: ExpressionEntity = ExpressionEntity()
 }

@@ -12,7 +12,7 @@ fun parseExpression(expression: TreeNode): ExpressionEntity {
         "postfixUnaryExpression" -> {
             if (expression.has("postfixUnarySuffix")) {
                 if (!expression.getOne("primaryExpression").has("stringLiteral")) {
-                    val func = FunctionExpression()
+                    val func = FunctionInvokeExpression()
                     func.functionName =
                         parseString(expression.getOne("primaryExpression").getOne("simpleIdentifier")).joinToString("")
                     expression.forEach {
