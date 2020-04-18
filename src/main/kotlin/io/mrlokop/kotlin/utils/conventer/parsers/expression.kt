@@ -100,7 +100,17 @@ fun parseExpression(expression: TreeNode): ExpressionEntity {
         }
 
         "functionLiteral" -> {
-
+            if (expression.has("lambdaLiteral")) {
+                return parseExpression(expression.children[0])
+            }
+            throw IllegalArgumentException("Unsupported expression\n${expression}")
+        }
+        "lambdaLiteral" -> {
+            val ent = LambdaExpression()
+            expression.getOne("statements").forEach {
+                ent.statements.add(parseStatement(it))
+            }
+            return ent
         }
         "literalConstant" -> {
             val const = ConstantExpression()
@@ -157,10 +167,7 @@ fun parseExpression(expression: TreeNode): ExpressionEntity {
                 }
             }
         }
-        "NL" -> {
-
-        }
-        "SEMICOLON" -> {
+        "NL", "SEMICOLON" -> {
         }
         "simpleIdentifier" -> {
             val id = IdentifierExpression()
@@ -189,7 +196,7 @@ fun parseExpression(expression: TreeNode): ExpressionEntity {
             }
         }
         else -> {
-            throw IllegalArgumentException("Not supported expression\n\n-> ${expression.token}\n${expression}")
+            throw IllegalArgumentException("Unsupported expression\n\n-> ${expression.token}\n${expression}")
         }
     }
 

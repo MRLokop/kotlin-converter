@@ -10,10 +10,13 @@ import org.jetbrains.kotlin.spec.grammar.tools.tokenizeKotlinCode
 import java.io.File
 import java.nio.charset.Charset
 
-fun main() {
-
+fun main(args: Array<String>) {
+    var dir = "inputs"
+    if (args.isNotEmpty()) {
+        dir = args[0]
+    }
     val entries = mutableListOf<EntryEntity>()
-    File("inputs").listFiles().forEach {
+    File(dir).listFiles().forEach {
 
         val tokens = tokenizeKotlinCode(
             FileUtils.readFileToString(it, Charset.defaultCharset())

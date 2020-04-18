@@ -208,6 +208,17 @@ if (key === "main") {
             script += " "
             return script
         }
+        if (expression is LambdaExpression) {
+
+            var script = "(/* not supported now */) => {\n"
+            expression.statements.forEach {
+                it.expressions.forEach {
+                    script += wrap(it) + ";\n"
+                }
+            }
+            script += "\n}"
+            return script
+        }
         if (expression is AdditiveExpression) {
             var script = " "
             expression.operations.forEach {
