@@ -252,6 +252,7 @@ if (key === "main") {
 class JSConverter(val entries: List<EntryEntity>) {
 
     var enableExpressionsShow = false
+    var enableAutoRun = true
 
     fun convert(): String {
         var script = ScriptBuilder()
@@ -286,6 +287,7 @@ class JSConverter(val entries: List<EntryEntity>) {
                                 +(if (it.decType == "var") "var" else "const") + " " + it.name + " = ",
                                 it.expression!!
                             )
+                            +escapePackage(entry.packageName) + "['" + it.name + "'] = " + it.name
                         }
                     }
                 }
@@ -326,6 +328,8 @@ class JSConverter(val entries: List<EntryEntity>) {
                             }
                             line.script--
                             line.script + "}"
+
+                            +escapePackage(entry.packageName) + "['" + it.name + "'] = " + it.name
                         }
                     }
                 }
@@ -341,6 +345,12 @@ class JSConverter(val entries: List<EntryEntity>) {
         script + "return root;"
         script--
         script + "}"
+        if (enableAutoRun) {
+            +script
+            +script
+            script + "// Autorun"
+            script + "console.log(\"Data:\", exports())"
+        }
         return script.toString()
     }
 
@@ -378,28 +388,32 @@ class JSConverter(val entries: List<EntryEntity>) {
 
     private fun includeBootstrap(script_: ScriptBuilder) {
         var script = script_
-        /*
-        JS:
+        script + "function recursive(data) {"
+        script++
+        script + "for (const key of Object.keys(data)) {"
+        script++
+        script + "const v = data[key];"
+        script + "if (typeof v === 'object') {"
+        script++
+        script + "recursive(v)"
+        script--
+        script + "}"
+        script + "if (typeof v === 'function') {"
+        script++
+        script + "if (key === \"main\") {"
+        script++
+        script + "v()"
+        script--
+        script + "}"
+        script--
+        script + "}"
+        script--
+        script + "}"
+        script--
+        script + "}"
 
-        function recursive(data) {
-            for (const key of Object.keys(data)) {
-                const v = data[key];
-
-                if (typeof v === 'object') {
-                    recursive(v)
-                }
-                if (typeof v === 'function') {
-                    if (key === "main") {
-                        v()
-                    }
-
-                }
-            }
-        }
-
-        recursive(root)
-
-         */
+        +script
+        script + "recursive(root)"
     }
 
     /** UTILS **/
@@ -455,6 +469,38 @@ class JSConverter(val entries: List<EntryEntity>) {
                     line.sub(1) + ");"
                 } else {
                     line + ")"
+                }
+            }
+
+            is MultiplicativeExpression -> {
+
+                expression.operations.forEach {
+                    if (it is MultiplicativeData) {
+                        expr(line + " ( ", it.data) + " ) "
+                    }
+                    if (it is MultiplicativeOperator) {
+                        line + it.data
+                    }
+                }
+            }
+            is ConstantExpression -> {
+                when (expression.const) {
+                    is IntPrimitiveEntity -> {
+                        line + (expression.const as IntPrimitiveEntity).get().toString()
+                    }
+                    else -> {
+                        line + "/* Failed to unwrap ConstantExpression (${expression.const!!.javaClass.simpleName}) */"
+                    }
+                }
+            }
+            is AdditiveExpression -> {
+                expression.operations.forEach {
+                    if (it is AdditiveData) {
+                        expr(line + " ( ", it.data) + " ) "
+                    }
+                    if (it is AdditiveOperator) {
+                        line + it.data
+                    }
                 }
             }
             is LambdaExpression -> {

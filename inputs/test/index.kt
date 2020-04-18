@@ -8,4 +8,10 @@ fun main(args: Array<String>) {
         console.log(hello, "how are you?")
     }
     hey()
+    subFunc()
+}
+
+fun subFunc() {
+    console.log("Hello from sub function!")
+    a()
 }
