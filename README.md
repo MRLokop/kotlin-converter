@@ -1,7 +1,7 @@
 
 <h1 align="center">Kotlin Converter</h1>
 <p align="center">Converts kotlin to other languages</p>
-<p align="center">
+<div align="center">
    
 [![](https://tokei.rs/b1/github/TheMRLokopOff/kotlin-converter)](https://github.com/XAMPPRocky/tokei)
 
