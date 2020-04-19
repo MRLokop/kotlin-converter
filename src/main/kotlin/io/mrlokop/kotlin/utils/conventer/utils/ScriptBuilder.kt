@@ -65,7 +65,6 @@ class ScriptBuilder {
             var a = script.script.substringBeforeLast("\n")
 
             script.script = a.substring(0, a.length - i) + "\n"
-            debug("Sub from $b to ${get()}")
             return this
         }
 

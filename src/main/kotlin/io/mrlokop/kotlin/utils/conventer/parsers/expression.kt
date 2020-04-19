@@ -5,49 +5,62 @@ import io.mrlokop.kotlin.utils.conventer.enities.MultiLineText
 import io.mrlokop.kotlin.utils.conventer.enities.MultilineStringLiteralEntity
 import io.mrlokop.kotlin.utils.conventer.enities.expression.*
 import io.mrlokop.kotlin.utils.conventer.utils.TreeNode
-import io.mrlokop.kotlin.utils.conventer.utils.debug
 
 fun parseExpression(expression: TreeNode): ExpressionEntity {
     when (expression.token) {
         "postfixUnaryExpression" -> {
             if (expression.has("postfixUnarySuffix")) {
-                if (!expression.getOne("primaryExpression").has("stringLiteral")) {
-                    val func = FunctionInvokeExpression()
-                    func.functionName =
-                        parseString(expression.getOne("primaryExpression").getOne("simpleIdentifier")).joinToString("")
-                    expression.forEach {
-                        debug(
-                            "   -> " + func.member,
-                            func.functionName,
-                            " --> ",
-                            it.token
-                        )
-                        if (!it.has("callSuffix")) {
-                            if (it.token == "primaryExpression") {
-                                func.functionName = parseString(it.getOne("simpleIdentifier")).joinToString("")
-                            } else if (it.token == "navigationSuffix") {
-                                func.member += "." + func.functionName
-                                func.functionName = parseString(it.getOne("simpleIdentifier")).joinToString("")
-                            } else {
-                                func.member += "." + func.functionName
-                                func.functionName = parseString(
+                var ent = FunctionInvokeExpression()
+                expression.forEach {
+                    when (it.token) {
+                        "primaryExpression" -> {
+                            ent.functionName = parseString(it.getOne("simpleIdentifier")).joinToString("")
+                        }
+                        "postfixUnarySuffix" -> {
+                            if (it.has("callSuffix")) {
+                                val old = ent
+                                ent = FunctionInvokeExpression()
+                                ent.parent = old
+                                val callSuffix = it.getOne("callSuffix")
+                                if (callSuffix.has("valueArguments")) {
+                                    if (callSuffix.getOne("valueArguments").has("LPAREN")) {
+                                        if (ent.parent != null && ent.parent is FunctionInvokeExpression)
+                                            (ent.parent!! as FunctionInvokeExpression).isMember = true
+                                    }
+                                    callSuffix.getOne("valueArguments").forEach {
+                                        when (it.token) {
+                                            "valueArgument" -> {
+                                                (ent.parent!! as FunctionInvokeExpression).args.add(
+                                                    parseExpression(
+                                                        it.getOne(
+                                                            "expression"
+                                                        )
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                } else if (callSuffix.has("annotatedLambda")) {
+                                    ent.args.add(
+                                        parseExpression(
+                                            callSuffix.getOne("annotatedLambda").getOne("lambdaLiteral")
+                                        )
+                                    )
+                                }
+                            }
+                            if (it.has("navigationSuffix")) {
+                                val old = ent
+                                ent = FunctionInvokeExpression()
+                                ent.parent = old
+                                ent.isDotAccessor = true
+                                ent.functionName = parseString(
                                     it.getOne("navigationSuffix").getOne("simpleIdentifier")
                                 ).joinToString("")
                             }
-
-                        } else {
-                            func.args.addAll(parseArguments(it.getOne("callSuffix").getOne("valueArguments")))
-
                         }
-                        //func.args.addAll(parseArguments(
-                    }//
-                    if (func.member.isNotEmpty()) {
-                        func.member = func.member.substring(1)
                     }
-                    return func
-                } else {
-                    return parseExpression(expression.children[1])
                 }
+                return ent
             } else {
 
                 return parseExpression(expression.children[0])
@@ -110,6 +123,13 @@ fun parseExpression(expression: TreeNode): ExpressionEntity {
             expression.getOne("statements").forEach {
                 ent.statements.add(parseStatement(it))
             }
+            if (expression.has("lambdaParameters")) {
+                expression.getOne("lambdaParameters").forEach {
+                    if (it.token != "COMMA") {
+                        ent.parameters.add(parsePropertyDeclaration(it))
+                    }
+                }
+            }
             return ent
         }
         "literalConstant" -> {
@@ -135,9 +155,18 @@ fun parseExpression(expression: TreeNode): ExpressionEntity {
             return string
         }
         "declaration" -> {
-            val r = DeclarationExpression()
-            r.field = parsePropertyDeclaration(expression.getOne("propertyDeclaration"))
-            return r
+            if (expression.has("functionDeclaration")) {
+                val r = FunctionDeclarationExpression()
+                r.function = parseFunctionDeclaration(expression.getOne("functionDeclaration"))
+                return r
+
+            } else if (expression.has("propertyDeclaration")) {
+                val r = PropertyDeclarationExpression()
+                r.field = parsePropertyDeclaration(expression.getOne("propertyDeclaration"))
+                return r
+            } else {
+                throw IllegalArgumentException("Unsupported expression\n\n${expression}")
+            }
         }
         "multiLineStringLiteral" -> {
             val obj = MultilineStringLiteralEntity()
@@ -195,8 +224,25 @@ fun parseExpression(expression: TreeNode): ExpressionEntity {
                 }
             }
         }
+        "jumpExpression" -> {
+            val ext = JumpExpression()
+            expression.forEach {
+                when (it.token) {
+                    "RETURN" -> {
+                        ext.jumpType = "return"
+                    }
+                    "expression" -> {
+                        ext.expression = parseExpression(it)
+                    }
+                    else -> {
+                        throw IllegalArgumentException("Unsupported expression\n\n-> ${expression}")
+                    }
+                }
+            }
+            return ext
+        }
         else -> {
-            throw IllegalArgumentException("Unsupported expression\n\n-> ${expression.token}\n${expression}")
+            throw IllegalArgumentException("Unsupported expression\n\n${expression}")
         }
     }
 

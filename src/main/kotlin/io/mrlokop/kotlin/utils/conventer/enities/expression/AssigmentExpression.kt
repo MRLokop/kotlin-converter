@@ -4,4 +4,8 @@ import io.mrlokop.kotlin.utils.conventer.enities.FieldEntity
 
 class AssigmentExpression : ExpressionEntity() {
     var field: FieldEntity = FieldEntity()
+
+    init {
+        type = "assigment-expression"
+    }
 }

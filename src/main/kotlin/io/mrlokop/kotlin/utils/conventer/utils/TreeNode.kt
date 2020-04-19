@@ -68,7 +68,7 @@ class TreeNode(private val kps: KotlinParseTree) {
                 return child
             }
         }
-        throw java.lang.NullPointerException("Failed to found '$name' in \n\n-> ${token}:\n $this")
+        throw java.lang.NullPointerException("Failed to found '$name' in \n\n$this")
     }
 
     fun peekIfExists(name: String): Boolean {

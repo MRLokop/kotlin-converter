@@ -5,7 +5,9 @@ class FunctionInvokeExpression : ExpressionEntity() {
         type = "functionInvoke"
     }
 
-    var member = ""
+    var isMember = false
+    var isDotAccessor = false
+    var parent: ExpressionEntity? = null
     var functionName = ""
     var args = mutableListOf<ExpressionEntity>()
 }

@@ -2,9 +2,10 @@ package io.mrlokop.kotlin.utils.conventer.enities
 
 import io.mrlokop.kotlin.utils.conventer.enities.expression.ExpressionEntity
 
-class MultilineStringLiteralEntity {
+class MultilineStringLiteralEntity : AbstractEntity("multiline-entity") {
     val data = mutableListOf<MultiLineObject>()
 }
+
 abstract class MultiLineObject
 class MultiLineText : MultiLineObject(){
     var text = ""

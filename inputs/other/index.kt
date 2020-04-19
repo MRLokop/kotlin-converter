@@ -7,6 +7,6 @@ fun main() {
     val hello = "Hello"
     console.log(hello + "!") // Add name resolver for resolve testVariable
     console.log("I am am Test Script")
-    console.log("To change me goto inputs/index.kt")
+    console.log("To change me goto inputs/testNode.kt")
     console.log("Good luck ;^)")
 }

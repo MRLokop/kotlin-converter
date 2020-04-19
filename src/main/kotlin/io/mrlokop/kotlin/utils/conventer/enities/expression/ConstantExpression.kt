@@ -4,7 +4,7 @@ import io.mrlokop.kotlin.utils.conventer.enities.PrimitiveEntity
 
 class ConstantExpression : ExpressionEntity() {
     init {
-        type = "function"
+        type = "primitive-constant"
     }
     var const: PrimitiveEntity? = null
 }

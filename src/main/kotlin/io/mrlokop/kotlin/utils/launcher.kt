@@ -26,14 +26,16 @@ fun main(args: Array<String>) {
 
     }
 
+    FileUtils.writeStringToFile(File("AST.json"), Gson().toJson(entries), Charset.defaultCharset())
     val converter = JSConverter(entries)
 
     FileUtils.writeStringToFile(File("output.js"), converter.convert(), Charset.defaultCharset())
-    FileUtils.writeStringToFile(File("AST.json"), Gson().toJson(entries), Charset.defaultCharset())
 
     println()
     println()
     println(" Starting ... ")
+    println("  __ __ __ __ __ __ __ __ __ __ __ __ __ __")
+    println()
 
     val b = ProcessBuilder()
         .inheritIO()
@@ -41,6 +43,10 @@ fun main(args: Array<String>) {
         .command("/usr/bin/bash", "/home/mrlokop/IdeaProjects/KotlinUtils/run.sh")
     b.environment()
         .putAll(System.getenv())
-    b.start()
+    b.start().waitFor()
+
+    println()
+    println("  __ __ __ __ __ __ __ __ __ __ __ __ __ __")
+    println()
 
 }

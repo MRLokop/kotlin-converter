@@ -10,3 +10,13 @@ fun parsePackage(kp: TreeNode): String {
         }.joinToString("")
     }.joinToString("")
 }
+
+fun parseImports(importList: TreeNode): List<String> {
+    return importList.children.map {
+        return@map it.children.map {
+            return@map it.children.map {
+                return@map parseString(it).joinToString("")
+            }.joinToString("")
+        }.joinToString("")
+    }
+}

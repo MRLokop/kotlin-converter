@@ -26,7 +26,9 @@ open class KParser(val tree: KotlinParseTree, var fileName: String = "undefined"
         when (kp.token) {
             "packageHeader" -> {
                 entry.packageName = parsePackage(kp)
-                println("ParsedPackage: ${entry.packageName}")
+            }
+            "importList" -> {
+                entry.imports.addAll(parseImports(kp))
             }
             "topLevelObject" -> {
                 val t = parseTopLevel(kp)
@@ -34,7 +36,7 @@ open class KParser(val tree: KotlinParseTree, var fileName: String = "undefined"
                 //  println(entry.packageName);
             }
             "EOF" -> {
-                println("Parsed")
+                println("File: $fileName parsed [EOF]")
             }
             else -> {
                 parse(kp, iterations + 1)
