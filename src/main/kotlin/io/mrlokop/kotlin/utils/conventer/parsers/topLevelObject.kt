@@ -2,6 +2,7 @@ package io.mrlokop.kotlin.utils.conventer.parsers
 
 import io.mrlokop.kotlin.utils.conventer.enities.*
 import io.mrlokop.kotlin.utils.conventer.enities.expression.ExpressionEntity
+import io.mrlokop.kotlin.utils.conventer.exceptions.UnknownDeclarationException
 import io.mrlokop.kotlin.utils.conventer.utils.TreeNode
 
 
@@ -28,11 +29,35 @@ fun parseDeclaration(dec: TreeNode): DeclarationEntity {
             "propertyDeclaration" -> {
                 declaration.fields.add(parsePropertyDeclaration(it))
             }
+            "classDeclaration" -> {
+                declaration.classes.add(parseClassDeclaration(it))
+            }
+            else -> {
+                throw UnknownDeclarationException(it.token)
+            }
         }
     }
     return declaration
 }
 
+fun parseClassDeclaration(tree: TreeNode): ClassEntity {
+    var ent = ClassEntity()
+    tree.forEach {
+        when (it.token) {
+            "simpleIdentifier" -> {
+                ent.name = parseString(it).joinToString("")
+            }
+            "classBody" -> {
+                it.getOne("classMemberDeclarations").forEach {
+                    it.forEach {
+                        ent.declarations.add(parseDeclaration(it))
+                    }
+                }
+            }
+        }
+    }
+    return ent
+}
 
 fun parsePropertyDeclaration(func: TreeNode): FieldEntity {
     val field = FieldEntity()
@@ -54,6 +79,7 @@ fun parsePropertyDeclaration(func: TreeNode): FieldEntity {
     }
 
     return field
+
 }
 
 fun parseFunctionDeclaration(func: TreeNode): FunctionEntity {
@@ -84,6 +110,9 @@ fun parseFunctionDeclaration(func: TreeNode): FunctionEntity {
                             it.peek("parameter") {
                                 function.params.add(parseParameter(it))
                             }
+                        }
+                        // (          )
+                        "LPAREN", "RPAREN" -> {
                         }
                         else -> {
                             println("unexpected: ${it.token}")

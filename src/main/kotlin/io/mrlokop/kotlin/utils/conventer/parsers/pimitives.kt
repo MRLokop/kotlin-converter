@@ -3,9 +3,10 @@ package io.mrlokop.kotlin.utils.conventer.parsers
 import io.mrlokop.kotlin.utils.conventer.enities.IntPrimitiveEntity
 import io.mrlokop.kotlin.utils.conventer.enities.PrimitiveEntity
 import io.mrlokop.kotlin.utils.conventer.utils.TreeNode
+import io.mrlokop.kotlin.utils.conventer.utils.warn
 import org.jetbrains.kotlin.spec.grammar.tools.KotlinParseTreeNodeType
 
-fun parseString(kpt: TreeNode): List<String> {
+fun parseString(kpt: TreeNode, addSemi: Boolean = false): List<String> {
     when (kpt.token) {
         "simpleIdentifier" -> {
             return kpt.children.map {
@@ -23,6 +24,18 @@ fun parseString(kpt: TreeNode): List<String> {
         "DOT" -> {
             return listOf(kpt.text)
         }
+        "SEMICOLON" -> {
+            if (addSemi)
+                return listOf(";")
+
+        }
+        "FIELD" -> {
+            return listOf(kpt.text)
+        }
+        "NL" -> {
+            if (addSemi)
+                return listOf(System.lineSeparator())
+        }
         "lineStringContent" -> {
             if (kpt.has("LineStrText")) {
                 return listOf(kpt.getOne("LineStrText").text)
@@ -31,7 +44,7 @@ fun parseString(kpt: TreeNode): List<String> {
             }
         }
         else -> {
-            //println("Unknown: ${getTreeType(kpt)}")
+            warn("Unknown string: ${kpt.token}")
         }
     }
     return listOf()

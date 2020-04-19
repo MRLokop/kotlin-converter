@@ -1,6 +1,7 @@
 package io.mrlokop.kotlin.utils.conventer.utils
 
 import io.mrlokop.kotlin.utils.conventer.enities.*
+import io.mrlokop.kotlin.utils.conventer.enities.expression.LambdaExpression
 
 class ConverterScope {
 
@@ -55,16 +56,16 @@ class ConverterScope {
             return results
         }
 
-        fun resolveLocalFunctionByName(function: String): MutableList<FunctionEntity> {
-            debug("[${entry.id}] => Resolving: $function...")
+        fun resolveLocalFunctionByName(
+            function: String,
+            includeVariables: Boolean = true
+        ): MutableList<FunctionEntity> {
             val results = mutableListOf<FunctionEntity>()
             functions.forEach {
                 if (it.name == function)
                     results.add(it)
             }
             if (links[function] != null) {
-                debug("[${entry.id}] --> Found: $function")
-
                 links[function]!!.forEach {
                     if (it is FunctionEntity) {
                         if (it.name == function)
@@ -72,7 +73,27 @@ class ConverterScope {
                     }
                 }
             }
-            debug("[${entry.id}] --> Resolved: $function: ${results.size}")
+            if (includeVariables) {
+                fields.forEach {
+                    if (it.name == function) {
+                        if (it.expression is LambdaExpression) {
+                            val lambda: LambdaExpression = it.expression as LambdaExpression
+                            val func = FunctionEntity()
+                            func.body.block.statements.addAll(lambda.statements)
+                            func.params.addAll(lambda.parameters)
+                            func.scope = this
+                            func.name = function
+                            func.visibility = it.visibility
+                            //func.mods = it.
+                            results.add(func)
+                        }
+                    }
+                }
+            }
+
+            if (results.size == 0) {
+                warn("[${entry.id}] --> Failed resolving: $function: Not found")
+            }
             return results
         }
 
@@ -163,6 +184,19 @@ class ConverterScope {
                 }
                 is TypeEntity -> {
                     ent.subTypes.forEach {
+                        registerScope(it)
+                    }
+                }
+                is DeclarationEntity -> {
+                    ent.functions.forEach {
+                        registerScope(it)
+                    }
+                    ent.fields.forEach {
+                        registerScope(it)
+                    }
+                }
+                is TopLevelEntity -> {
+                    ent.declarations.forEach {
                         registerScope(it)
                     }
                 }
