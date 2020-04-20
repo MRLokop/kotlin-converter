@@ -1,7 +1,7 @@
 package io.mrlokop.kotlin.utils.conventer.parsers
 
 import io.mrlokop.kotlin.utils.conventer.enities.EntryEntity
-import io.mrlokop.kotlin.utils.conventer.utils.ConverterScope
+import io.mrlokop.kotlin.utils.conventer.scopes.ConverterScope
 import io.mrlokop.kotlin.utils.conventer.utils.TreeNode
 import org.jetbrains.kotlin.spec.grammar.tools.KotlinParseTree
 import java.lang.reflect.Field

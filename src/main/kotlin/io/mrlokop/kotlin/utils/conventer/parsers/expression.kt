@@ -14,7 +14,7 @@ fun parseExpression(expression: TreeNode): ExpressionEntity {
                 expression.forEach {
                     when (it.token) {
                         "primaryExpression" -> {
-                            ent.functionName = parseString(it.getOne("simpleIdentifier")).joinToString("")
+                            ent.name = parseString(it.getOne("simpleIdentifier")).joinToString("")
                         }
                         "postfixUnarySuffix" -> {
                             if (it.has("callSuffix")) {
@@ -53,12 +53,15 @@ fun parseExpression(expression: TreeNode): ExpressionEntity {
                                 ent = FunctionInvokeExpression()
                                 ent.parent = old
                                 ent.isDotAccessor = true
-                                ent.functionName = parseString(
+                                ent.name = parseString(
                                     it.getOne("navigationSuffix").getOne("simpleIdentifier")
                                 ).joinToString("")
                             }
                         }
                     }
+                }
+                if (ent.name.isEmpty() && !ent.isMember && !ent.isDotAccessor && ent.parent != null) {
+                    return ent.parent!!
                 }
                 return ent
             } else {

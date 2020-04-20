@@ -7,9 +7,11 @@ import io.mrlokop.kotlin.utils.conventer.enities.IntPrimitiveEntity
 import io.mrlokop.kotlin.utils.conventer.enities.TypeEntity
 import io.mrlokop.kotlin.utils.conventer.enities.expression.*
 import io.mrlokop.kotlin.utils.conventer.exceptions.UnresolvedReferenceException
-import io.mrlokop.kotlin.utils.conventer.utils.ConverterScope
+import io.mrlokop.kotlin.utils.conventer.scopes.ConverterScope
+import io.mrlokop.kotlin.utils.conventer.scopes.EntryScope
 import io.mrlokop.kotlin.utils.conventer.utils.ScriptBuilder
 import io.mrlokop.kotlin.utils.conventer.utils.debug
+import io.mrlokop.kotlin.utils.conventer.utils.trace
 
 class JSConverter(val entries: List<EntryEntity>) {
     fun convert(): String {
@@ -25,6 +27,10 @@ class JSConverter(val entries: List<EntryEntity>) {
         +script
         entries.forEach { entry ->
             val entryScope = scope.makeEntryScope(entry)
+        }
+        entries.forEach { entry ->
+            val entryScope = scope.makeEntryScope(entry)
+            entryScope.compile()
         }
         entries.forEach { entry ->
             val entryScope = scope.makeEntryScope(entry)
@@ -68,16 +74,27 @@ class JSConverter(val entries: List<EntryEntity>) {
             +script
             +script
             script + "// Autorun"
-            script + "console.log()"
-            script + "console.log(\"  __ __ __ __ __ __ __ __ __ __ __ __ __ __\")"
-            script + "console.log()"
-            script + "console.log(\"Data:\", exports())"
+            script + "try {"
+            script.wrap {
+                script + "const data = exports();"
+
+                script + "console.log();"
+                script + "console.log(\"  __ __ __ __ __ __ __ __ __ __ __ __ __ __\");"
+                script + "console.log();"
+                script + "console.log(\"Data:\", data);"
+            }
+            script + "} catch(error) {"
+            script.wrap {
+                script + "console.error(\"Failed to run\")"
+                script + "console.error(error)"
+            }
+            script + "}"
         }
         return script.toString()
     }
 
     fun ScriptBuilder.serializeDeclaration(
-        entryScope: ConverterScope.EntryScope,
+        entryScope: EntryScope,
         declarationEntity: DeclarationEntity,
         classWrap: Int = 0
     ) {
@@ -153,15 +170,16 @@ class JSConverter(val entries: List<EntryEntity>) {
             val parentClassName = className
             val className = "\$\$class${classWrap + 1}"
             val name = "\$\$class_${it.name}"
-            script + "const $name = (...\$args) => {}"
-            script + "(() => {"
+            script + "const $name = function () {"
             script.wrap {
-                +"const ${className} = $name;"
+                +"const ${className} = this;"
+                +""
                 it.declarations.forEach {
                     serializeDeclaration(entryScope, it, classWrap + 1)
                 }
+                +"return this;"
             }
-            script + "})();"
+            script + "}"
 
             if (!isFromClazz) {
                 +escapePackage(entryScope.entry.packageName) + "['" + it.name + "'] = " + name
@@ -268,7 +286,7 @@ private fun expr(
     line_: ScriptBuilder.ScriptLine,
     expression: ExpressionEntity,
     fromRoot: Boolean = false,
-    scope: ConverterScope.EntryScope
+    scope: EntryScope
 ): ScriptBuilder.ScriptLine {
     var line = line_
     if (enableExpressionsShow)
@@ -318,17 +336,34 @@ private fun expr(
                     line + "."
             }
             // resolving function
-            val resolve = scope.resolveLocalFunctionByName(expression.functionName)
-            if (resolve.isEmpty()) {
-                if (!allowUnresolvedReference) {
-                    throw UnresolvedReferenceException(expression.functionName)
+            if (expression.isMember) {
+                val resolve = scope.resolveLocalFunctionByName(expression.name)
+                if (resolve.isEmpty()) {
+                    trace("-> Function '${expression.name}' not resolved: trying resolve by class")
+                    val resolveClass = scope.resolveLocalClassByName(expression.name)
+                    if (resolveClass.isEmpty()) {
+
+                        if (!allowUnresolvedReference) {
+                            throw UnresolvedReferenceException(expression.name)
+                        } else {
+                            line + "/* Unresolved */"
+                        }
+
+                    } else {
+                        trace("--> Resolved!")
+                        resolveClass.forEach {
+                            line + "root.${it.scope.entry.packageName}."
+                        }
+                    }
+                } else {
+
+                    resolve.forEach {
+                        line + "root.${it.scope.entry.packageName}."
+                    }
                 }
             }
-            resolve.forEach {
-                line + "root.${it.scope.entry.packageName}."
-            }
 
-            line + expression.functionName
+            line + expression.name
 
             if (expression.isMember) {
                 line + "("
